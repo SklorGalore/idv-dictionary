@@ -1,0 +1,74 @@
+{
+  "name": "command-dictionary",
+  "displayName": "Command Dictionary",
+  "description": "Sidebar dictionary of commands/snippets you can click to insert into the editor.",
+  "publisher": "your-name",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onView:commandDictionaryView",
+    "onCommand:commandDictionary.insert",
+    "onCommand:commandDictionary.refresh"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "commandDictionaryContainer",
+          "title": "Command Dictionary",
+          "icon": "resources/dictionary.svg"
+        }
+      ]
+    },
+    "views": {
+      "commandDictionaryContainer": [
+        {
+          "icon": "resources/dictionary.svg",
+          "type": "tree",
+          "id": "commandDictionaryView",
+          "name": "Snippets"
+        }
+      ]
+    },
+    "commands": [
+      { "command": "commandDictionary.insert", "title": "Insert Command" },
+      { "command": "commandDictionary.refresh", "title": "Refresh Command Dictionary" }
+    ],
+    "configuration": {
+      "title": "Command Dictionary",
+      "properties": {
+        "commandDictionary.commands": {
+          "type": "array",
+          "default": [
+            { "label": "Print Hello", "insertText": "console.log('Hello');", "description": "JS example" },
+            { "label": "TODO Comment", "insertText": "// TODO: implement", "description": "Generic note" }
+          ],
+          "items": {
+            "type": "object",
+            "required": ["label", "insertText"],
+            "properties": {
+              "label": { "type": "string", "description": "Shown in the sidebar" },
+              "insertText": { "type": "string", "description": "Text to insert into the editor" },
+              "description": { "type": "string", "description": "Optional smaller subtitle" },
+              "group": { "type": "string", "description": "Optional group/category" }
+            }
+          },
+          "description": "List of command snippets shown in the Command Dictionary view."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0",
+    "vsce": "^2.15.0"
+  }
+}
