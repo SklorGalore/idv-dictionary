@@ -1,0 +1,86 @@
+[
+  {
+    "label": "Solution Parameters",
+    "insertText": "BAT_SOLUTION_PARAMETERS_5,ITMX,ITMXN,ITMXTY,MXTPSS,MXSWIM,MOVSCMAX,ISOLVL,CAMAX,CNTCHK,ACCP,ACCQ,ACCM,TOL,ACCN,TOLN,ACCTY,TOLTY,BLOWUP,PQBRAK,THRSHZ,ADJTHR,ACCTAP,TAPLIM,DVLIM,NDVFCT,VCTOLQ,VCTOLV,SWVBND,MOVTOL,MOVALPHA",
+    "description": "Modify the power flow solution parameters in the working case.",
+    "group": "BAT/Powerflow Data"
+  },
+  {
+    "label": "Bus Data",
+    "insertText": "BAT_BUS_DATA_4,IBUS,INODE,IDE,AREA,ZONE,OWNER,BASKV,VM,VA,NMAXV,NMINV,EMAXV,EMINV,'NAME';",
+    "description": "Modify the data of an existing bus in the working case, or to add a new bus to the working case.",
+    "group": "BAT/Powerflow Data"
+  },
+  {
+    "label": "Branch Data",
+    "insertText": "BAT_BRANCH_3,IBUS,JBUS,'CKT',ST,METBUS,O1,O2,O3,O4,R,X,B,GI,BI,GJ,BJ,LEN,F1,F2,F3,F4,RATE1,RATE2,RATE3,RATE4,RATE5,RATE6,RATE7,RATE8,RATE9,RATE10,RATE11,RATE12,'NAME';",
+    "description": "Modify the data of an existing non-transformer branch to the working case or to add a new non-transformer branch to the working case.",
+    "group": "BAT/Powerflow Data"
+  },
+  {
+    "label": "Load Data",
+    "insertText": "BAT_LOAD_DATA_6,IBUS,'ID',STATUS,AREA,ZONE,OWNER,SCALE,INTRPT,DGNFLG,PL,QL,IP,IQ,YP,YQ,PG,QG,'LODTYP';",
+    "description": "Modify the data of an existing load in the working case, or to add a new load to the working case.",
+    "group": "BAT/Powerflow Data"
+  },
+  {
+    "label": "Machine Data",
+    "insertText": "BAT_MACHINE_DATA_4,IBUS,'ID',STAT,O1,O2,O3,O4,WMOD,BASFLG,PG,QG,QT,QB,PT,PB,MBASE,ZR,ZX,RT,XT,GTAP,F1,F2,F3,F4,WPF,'VDROOP';",
+    "description": "Modify the data of an existing machine in the working case, or to add a new machine to a plant bus in the working case.",
+    "group": "BAT/Powerflow Data"
+  },
+  {
+    "label": "Solve: Fast Decoupled Newton",
+    "insertText": "BAT_FDNS,ACTAP,AREAINTCHNG,PST,DCTAP,SWSHUNT,FLAT,VARLIMITS,NONDIVERGENT;",
+    "description": "Apply the fixed slope decoupled Newton-Raphson power flow calculation (activity FDNS).",
+    "group": "BAT/Powerflow Operation/Solve"
+  },
+  {
+    "label": "Solve: Full Newton",
+    "insertText": "BAT_FNSL,ACTAP,AREAINTCHNG,PST,DCTAP,SWSHUNT,FLAT,VARLIMITS,NONDIVERGENT;",
+    "description": "Apply the Newton-Raphson power flow calculation (activity FNSL).",
+    "group": "BAT/Powerflow Operation/Solve"
+  },
+  {
+    "label": "Solve: Decoupled Newton",
+    "insertText": "BAT_FNSL,ACTAP,AREAINTCHNG,PST,DCTAP,SWSHUNT,FLAT,VARLIMITS;",
+    "description": "apply the decoupled Newton-Raphson power flow calculation.",
+    "group": "BAT/Powerflow Operation/Solve"
+  },
+  {
+    "label": "Generate Report: Area Interchange",
+    "insertText": "BAT_INTA,SID,ALL;",
+    "description": "Summarize tie flows between an interchange area and all other areas in the working case.",
+    "group": "BAT/Powerflow Operation/Report Generation"
+  },
+  {
+    "label": "Generate Report: Zone Interchange",
+    "insertText": "BAT_INTZ,SID,ALL;",
+    "description": "Summarize tie flows between each zone and all other zones in the working case.",
+    "group": "BAT/Powerflow Operation/Report Generation"
+  },
+  {
+    "label": "Join Buses",
+    "insertText": "BAT_JOIN,IBUS,JBUS,STATUS",
+    "description": "Combines two buses into a single bus.",
+    "group": "BAT/Powerflow Operation"
+  },
+  {
+    "label": "Scale Bus Quantities",
+    "insertText": "BAT_SCAL_4,SID,ALL,APIOPT,INTRPTLOAD,LOADCMP,BASEGEN,PMETHOD,RESPECTLIMITS,QMETHOD,LOADMW,GENMW,SHUNTMW,REACTORMVAR,CAPMVAR,MOTORMW,QLOAD%;",
+    "description": "Uniformly increase or decrease any or all specified bus quantities for a specified group of buses. It must be referenced using one of the following procedures: - One reference with APIOPT=1, followed by one reference with APIOPT=2. - One reference with APIOPT=0. This automatically combines the processing of one APIOPT 1 reference, followed by one APIOPT 2 reference.",
+    "group": "BAT/Powerflow Operation"
+  },
+  {
+    "label": "Split Bus",
+    "insertText": "BAT_SPLT,BUS,NEWNUM,'NEWNAM',NEWKV;",
+    "description": "Add a bus to the working case and place a zero impedance line between bus BUS and the new bus. No other equipment is connected to the new bus by this API.",
+    "group": "BAT/Powerflow Operation"
+  },
+  {
+    "label":"Bus Subsystem: Define",
+    "insertText": "BAT_BSYS,SID,USEKV,BASEKVLOW,BASEKVHIGH,NUMAREA,AREAS...,NUMBUSES,BUSES...,NUMOWNERS,OWNERS...,NUMZONES,ZONES...;",
+    "description": "Define a bus subsystem. The criteria used to define the bus subsystem are evaluated using an AND criteria. That is to say, if a bus kV range, Areas and Zones are specified, to be in the bus subsystem a bus must be in the specified kV range AND must be in one of the Areas defined AND must be in one of the Zones defined. Failure to meet ANY of the specified criteria will remove the bus from the bus subsystem.",
+    "group": "BAT/Subsystem Definition/Bus Subsystems"
+  }
+]

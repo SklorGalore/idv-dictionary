@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 type CommandConfig = {
@@ -13,7 +15,7 @@ class CommandNode extends vscode.TreeItem {
   ) {
     super(cmd.label, vscode.TreeItemCollapsibleState.None);
     this.description = cmd.description;
-    this.tooltip = cmd.insertText;
+    this.tooltip = cmd.description;
     this.command = {
       command: 'commandDictionary.insert',
       title: 'Insert Command',
@@ -25,54 +27,58 @@ class CommandNode extends vscode.TreeItem {
 }
 
 class GroupNode extends vscode.TreeItem {
-  constructor(public readonly labelText: string) {
+  constructor(
+    public readonly labelText: string,
+    public readonly segments: string[],
+    public readonly isUngrouped = false
+  ) {
     super(labelText, vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon('list-unordered');
+    this.id = isUngrouped ? '__commandDictionaryUngrouped__' : segments.join('/') || labelText;
   }
 }
+
+const UNGROUPED_LABEL = 'Ungrouped';
+
+type CommandGroupTree = {
+  label: string;
+  segments: string[];
+  subgroups: Map<string, CommandGroupTree>;
+  commands: CommandConfig[];
+};
 
 class CommandTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  constructor(private readonly defaultCommands: CommandConfig[]) {}
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element;
   }
 
   getChildren(element?: vscode.TreeItem): vscode.ProviderResult<vscode.TreeItem[]> {
-    const cfg = vscode.workspace.getConfiguration('commandDictionary');
-    const items = (cfg.get<CommandConfig[]>('commands') ?? []).slice();
-
-    // If no groups exist, just flat-list items.
-    const groups = new Map<string, CommandConfig[]>();
-    let hasGroup = false;
-    for (const c of items) {
-      const g = c.group?.trim();
-      if (g) {
-        hasGroup = true;
-        if (!groups.has(g)) groups.set(g, []);
-        groups.get(g)!.push(c);
-      }
-    }
-
+    const items = this.getConfiguredCommands();
+    const tree = this.buildGroupTree(items);
     if (!element) {
-      if (!hasGroup) {
-        return items.map(i => new CommandNode(i));
-      } else {
-        const groupNames = Array.from(groups.keys()).sort();
-        const ungrouped = items.filter(i => !i.group?.trim());
-        const nodes: vscode.TreeItem[] = groupNames.map(name => new GroupNode(name));
-        if (ungrouped.length) {
-          nodes.unshift(new GroupNode('Ungrouped'));
-          groups.set('Ungrouped', ungrouped);
-        }
-        return nodes;
+      if (tree.subgroups.size === 0) {
+        return tree.commands.map(cmd => new CommandNode(cmd));
       }
+      const rootGroups = this.createGroupNodes(tree.subgroups);
+      if (tree.commands.length) {
+        rootGroups.unshift(new GroupNode(UNGROUPED_LABEL, [], true));
+      }
+      return rootGroups;
     } else if (element instanceof GroupNode) {
-      const cfg = vscode.workspace.getConfiguration('commandDictionary');
-      const items = (cfg.get<CommandConfig[]>('commands') ?? []).slice();
-      const inGroup = items.filter(i => (i.group?.trim() || 'Ungrouped') === element.label);
-      return inGroup.map(i => new CommandNode(i));
+      if (element.isUngrouped) {
+        return tree.commands.map(cmd => new CommandNode(cmd));
+      }
+      const group = this.findGroup(tree, element.segments);
+      if (!group) {
+        return [];
+      }
+      const subgroups = this.createGroupNodes(group.subgroups);
+      const commands = group.commands.map(cmd => new CommandNode(cmd));
+      return [...subgroups, ...commands];
     } else {
       return [];
     }
@@ -81,10 +87,100 @@ class CommandTreeProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
   refresh() {
     this._onDidChangeTreeData.fire();
   }
+
+  private buildGroupTree(items: CommandConfig[]): CommandGroupTree {
+    const root: CommandGroupTree = {
+      label: '',
+      segments: [],
+      subgroups: new Map(),
+      commands: []
+    };
+
+    for (const cmd of items) {
+      const pathSegments = this.parseGroupSegments(cmd.group);
+      if (pathSegments.length === 0) {
+        root.commands.push(cmd);
+        continue;
+      }
+
+      let node = root;
+      const currentPath: string[] = [];
+      for (const segment of pathSegments) {
+        currentPath.push(segment);
+        let next = node.subgroups.get(segment);
+        if (!next) {
+          next = {
+            label: segment,
+            segments: currentPath.slice(),
+            subgroups: new Map(),
+            commands: []
+          };
+          node.subgroups.set(segment, next);
+        }
+        node = next;
+      }
+      node.commands.push(cmd);
+    }
+
+    return root;
+  }
+
+  private createGroupNodes(groups: Map<string, CommandGroupTree>): GroupNode[] {
+    return Array.from(groups.values())
+      .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+      .map(group => new GroupNode(group.label, group.segments));
+  }
+
+  private findGroup(tree: CommandGroupTree, segments: string[]): CommandGroupTree | undefined {
+    let node: CommandGroupTree | undefined = tree;
+    for (const segment of segments) {
+      node = node?.subgroups.get(segment);
+      if (!node) {
+        return undefined;
+      }
+    }
+    return node;
+  }
+
+  private parseGroupSegments(group?: string): string[] {
+    if (!group) {
+      return [];
+    }
+    return group
+      .split('/')
+      .map(part => part.trim())
+      .filter(part => part.length > 0);
+  }
+
+  private getConfiguredCommands(): CommandConfig[] {
+    const cfg = vscode.workspace.getConfiguration('commandDictionary');
+    const inspected = cfg.inspect<CommandConfig[]>('commands');
+    if (!inspected) {
+      return this.defaultCommands.slice();
+    }
+
+    const candidates = [
+      inspected.workspaceFolderLanguageValue,
+      inspected.workspaceLanguageValue,
+      inspected.globalLanguageValue,
+      inspected.workspaceFolderValue,
+      inspected.workspaceValue,
+      inspected.globalValue
+    ];
+
+    for (const candidate of candidates) {
+      if (candidate !== undefined) {
+        return Array.isArray(candidate) ? candidate.slice() : this.defaultCommands.slice();
+      }
+    }
+
+    return this.defaultCommands.slice();
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  const provider = new CommandTreeProvider();
+  const defaultCommands = loadDefaultCommands(context.extensionPath);
+  const provider = new CommandTreeProvider(defaultCommands);
   const view = vscode.window.createTreeView('commandDictionaryView', {
     treeDataProvider: provider,
     showCollapseAll: true
@@ -124,6 +220,28 @@ export function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+}
+
+function loadDefaultCommands(extensionPath: string): CommandConfig[] {
+  const defaultsPath = path.join(extensionPath, 'resources', 'defaultCommands.json');
+  try {
+    const raw = fs.readFileSync(defaultsPath, 'utf8');
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(isCommandConfig);
+    }
+  } catch (error) {
+    console.error('commandDictionary: failed to load default commands', error);
+  }
+  return [];
+}
+
+function isCommandConfig(value: unknown): value is CommandConfig {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.label === 'string' && typeof candidate.insertText === 'string';
 }
 
 export function deactivate() {}
