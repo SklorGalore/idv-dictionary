@@ -1,6 +1,6 @@
-# Command Dictionary
+# IDV Dictionary
 
-Command Dictionary adds a dockable sidebar that lists reusable snippets/commands you can insert into the active editor with a single click. The view stays in sync with your settings so teams can share a curated library.
+IDV Dictionary adds a dockable sidebar that lists reusable snippets/commands you can insert into the active editor with a single click. The view stays in sync with your settings so teams can share a curated library.
 
 ## Features
 
@@ -11,7 +11,7 @@ Command Dictionary adds a dockable sidebar that lists reusable snippets/commands
 
 ## Getting Started
 
-1. Install the extension and open the **Command Dictionary** view from the activity bar.
+1. Install the extension and open the **IDV Dictionary** view from the activity bar.
 2. Configure snippets under `commandDictionary.commands` (settings UI or `settings.json`).
 3. Click an item to insert its `insertText` into the active editor. Multiple selections are supported.
 
