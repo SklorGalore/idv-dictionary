@@ -2,8 +2,9 @@
   "name": "command-dictionary",
   "displayName": "IDV Dictionary",
   "description": "Sidebar dictionary of commands/snippets you can click to insert into the editor.",
-  "publisher": "Skylar Coelho",
+  "publisher": "skylarcoelho",
   "version": "0.0.1",
+  "repository": {"url": "https://github.com/SklorGalore/idv-dictionary"},
   "engines": {
     "vscode": "^1.85.0"
   },
